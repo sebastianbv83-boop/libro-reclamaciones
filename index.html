@@ -331,6 +331,23 @@
       const val = el.type === 'checkbox' ? el.checked : el.value.trim();
       if (!val) { el.classList.add('error'); valid = false; }
     });
+
+    // Validar monto máximo S/5000
+    const montoEl = document.getElementById('monto');
+    if (montoEl.value && parseFloat(montoEl.value) > 5000) {
+      montoEl.classList.add('error');
+      montoEl.focus();
+      valid = false;
+    }
+
+    // Validar mínimo 100 caracteres en detalle
+    const detalleVal = document.getElementById('detalle').value.trim();
+    if (detalleVal.length < 100) {
+      document.getElementById('detalle').classList.add('error');
+      document.getElementById('detalle-contador').style.color = 'var(--danger)';
+      document.getElementById('detalle').focus();
+      valid = false;
+    }
     if (!valid) { const fe = form.querySelector('.error'); if (fe) fe.focus(); return; }
 
     btnEnviar.disabled = true;
