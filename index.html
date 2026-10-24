@@ -232,8 +232,8 @@
     <div class="section-body">
       <input type="hidden" id="bien-contratado" name="bien-contratado" value="Producto">
       <div class="row-2">
-        <input type="text" id="num-pedido" name="num-pedido" placeholder="Número de Pedido">
-        <input type="number" id="monto" name="monto" placeholder="Monto Reclamado (S/)" min="0" step="0.01">
+        <input type="text" id="num-pedido" name="num-pedido" placeholder="Número de Pedido" maxlength="12" inputmode="numeric">
+        <input type="number" id="monto" name="monto" placeholder="Monto Reclamado (S/)" min="0" max="5000" step="0.01">
       </div>
       <input type="text" id="descripcion-bien" name="descripcion-bien" placeholder="Nombre del producto adquirido" maxlength="150" required>
     </div>
@@ -394,6 +394,11 @@
   form.querySelectorAll('input, select, textarea').forEach(el => {
     el.addEventListener('input', () => el.classList.remove('error'));
     el.addEventListener('change', () => el.classList.remove('error'));
+  });
+
+  // Solo dígitos en número de pedido, máx 12
+  document.getElementById('num-pedido').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 12);
   });
 </script>
 </body></html>
