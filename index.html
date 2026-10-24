@@ -218,13 +218,7 @@
         </select>
         <input type="text" id="num-doc" name="num-doc" placeholder="Número de Documento" required>
       </div>
-      <select id="tipo-respuesta" name="tipo-respuesta" required>
-        <option value="" disabled selected>Tipo de respuesta (¿Dónde espera recibir la respuesta?)</option>
-        <option value="Correo Electrónico">Correo Electrónico</option>
-        <option value="WhatsApp / Teléfono">WhatsApp / Teléfono</option>
-        <option value="Domicilio">Domicilio</option>
-      </select>
-      <input type="email" id="correo" name="correo" placeholder="Correo Electrónico" required>
+      <input type="email" id="correo" name="correo" placeholder="Correo Electrónico (recibirás la confirmación aquí)" required>
       <input type="text" id="direccion" name="direccion" placeholder="Dirección Domiciliaria">
       <input type="tel" id="telefono" name="telefono" placeholder="Teléfono (Opcional)">
       <div class="radio-group">
@@ -234,29 +228,29 @@
       </div>
     </div>
 
-    <div class="section-header">2. Identificación del Bien Contratado</div>
+    <div class="section-header">2. Identificación del Producto Adquirido</div>
     <div class="section-body">
       <div class="row-3">
         <select id="bien-contratado" name="bien-contratado" required>
-          <option value="" disabled selected>Bien Contratado</option>
+          <option value="" disabled selected>Tipo de Producto</option>
           <option value="Producto">Producto</option>
           <option value="Servicio">Servicio</option>
         </select>
         <input type="text" id="num-pedido" name="num-pedido" placeholder="Número de Pedido">
         <input type="number" id="monto" name="monto" placeholder="Monto Reclamado (S/)" min="0" step="0.01">
       </div>
-      <textarea id="descripcion-bien" name="descripcion-bien" placeholder="Descripción del bien o servicio contratado" rows="3" required></textarea>
+      <input type="text" id="descripcion-bien" name="descripcion-bien" placeholder="Nombre del producto adquirido" maxlength="150" required>
     </div>
 
-    <div class="section-header">3. Detalle de la Reclamación y Pedido del Consumidor</div>
+    <div class="section-header">3. Detalle de la Reclamación</div>
     <div class="section-body">
       <select id="tipo-reclamo" name="tipo-reclamo" required>
         <option value="" disabled selected>Tipo</option>
         <option value="RECLAMO">* RECLAMO — disconformidad con el producto o servicio</option>
         <option value="QUEJA">** QUEJA — malestar respecto a la atención al público</option>
       </select>
-      <textarea id="detalle" name="detalle" placeholder="Detalle de la reclamación o queja" rows="4" required></textarea>
-      <textarea id="pedido" name="pedido" placeholder="Pedido del consumidor (¿Qué es lo que nos solicitas?)" rows="3" required></textarea>
+      <textarea id="detalle" name="detalle" placeholder="Describa brevemente lo que pasó con más de 100 caracteres para entender mejor su problema" rows="4" minlength="100" required></textarea>
+      <div id="detalle-contador" style="font-size:11px;color:var(--fg-muted);text-align:right;margin-top:4px;">0 / mínimo 100 caracteres</div>
     </div>
 
     <div class="form-footer">
@@ -345,7 +339,6 @@
 
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando…';
-
     const fechaEnvio = new Date();
     const numReclamo = generarNumReclamo(fechaEnvio);
 
@@ -357,7 +350,7 @@
       apellidos:        document.getElementById('apellidos').value.trim(),
       tipo_doc:         document.getElementById('tipo-doc').value,
       num_doc:          document.getElementById('num-doc').value.trim(),
-      tipo_respuesta:   document.getElementById('tipo-respuesta').value,
+      tipo_respuesta:   'Correo Electrónico',
       correo_cliente:   document.getElementById('correo').value.trim(),
       direccion:        document.getElementById('direccion').value.trim() || '—',
       telefono:         document.getElementById('telefono').value.trim() || '—',
@@ -368,12 +361,18 @@
       descripcion_bien: document.getElementById('descripcion-bien').value.trim(),
       tipo_reclamo:     document.getElementById('tipo-reclamo').value,
       detalle:          document.getElementById('detalle').value.trim(),
-      pedido:           document.getElementById('pedido').value.trim(),
     };
 
     try {
       if (emailjsReady) {
+        // Correo interno a Skincare Farma
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+        // Correo de confirmación al cliente
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          ...params,
+          to_email: params.correo_cliente,
+          es_confirmacion: 'true',
+        }).catch(() => {}); // si falla la confirmación, no bloquea
       }
       // Mostrar panel de éxito
       form.style.display = 'none';
@@ -385,6 +384,15 @@
       console.error('EmailJS error:', err);
       alert('Ocurrió un error al enviar tu reclamo. Por favor escríbenos directamente a atencionalcliente@skincarefarma.pe');
     }
+  });
+
+  // Contador de caracteres en detalle
+  const detalleEl = document.getElementById('detalle');
+  const contadorEl = document.getElementById('detalle-contador');
+  detalleEl.addEventListener('input', () => {
+    const len = detalleEl.value.length;
+    contadorEl.textContent = len + ' / mínimo 100 caracteres';
+    contadorEl.style.color = len >= 100 ? 'var(--accent)' : 'var(--fg-muted)';
   });
 
   form.querySelectorAll('input, select, textarea').forEach(el => {
