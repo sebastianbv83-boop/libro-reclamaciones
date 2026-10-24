@@ -317,13 +317,17 @@
   function tickClock() { document.getElementById('fecha-display').textContent = formatDate(new Date()); }
   tickClock(); setInterval(tickClock, 1000);
 
-  // Número correlativo
-  let correlativo;
-  const now = new Date();
-  try { correlativo = parseInt(localStorage.getItem('hr_correlativo') || '0') + 1; localStorage.setItem('hr_correlativo', correlativo); } catch(e) { correlativo = 1; }
-  const year = now.getFullYear();
-  const numReclamo = String(correlativo).padStart(8,'0') + '-' + year + '-WEB';
-  document.getElementById('numero-display').textContent = 'N°: ' + numReclamo;
+  // Número de reclamo único: fecha y hora exactas del envío + 4 dígitos aleatorios
+  // Formato: AAAAMMDD-HHMMSS-XXXX-WEB
+  function generarNumReclamo(d) {
+    const rnd = new Uint16Array(1);
+    crypto.getRandomValues(rnd);
+    const sufijo = String(rnd[0] % 10000).padStart(4,'0');
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate())
+      + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds())
+      + '-' + sufijo + '-WEB';
+  }
+  document.getElementById('numero-display').textContent = 'N°: se asigna al enviar';
 
   const form = document.getElementById('reclamo-form');
   const successPanel = document.getElementById('success-panel');
@@ -342,10 +346,13 @@
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando…';
 
+    const fechaEnvio = new Date();
+    const numReclamo = generarNumReclamo(fechaEnvio);
+
     // Variables disponibles en la plantilla de EmailJS
     const params = {
       num_reclamo:      numReclamo,
-      fecha:            formatDate(new Date()),
+      fecha:            formatDate(fechaEnvio),
       nombres:          document.getElementById('nombres').value.trim(),
       apellidos:        document.getElementById('apellidos').value.trim(),
       tipo_doc:         document.getElementById('tipo-doc').value,
